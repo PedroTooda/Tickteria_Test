@@ -1,0 +1,93 @@
+name: tickteira
+
+# Defaults embutidos: `docker compose up --build` funciona sem .env.
+x-env: &env
+  DATABASE_URL: postgresql://tickteira:tickteira@postgres:5432/tickteira?schema=public
+  REDIS_URL: redis://redis:6379
+  SMTP_HOST: mailpit
+  SMTP_PORT: "1025"
+  MAIL_FROM: ingressos@tickteira.local
+  PAGFACIL_WEBHOOK_SECRET: ${PAGFACIL_WEBHOOK_SECRET:-dev-secret-change-me}
+  API_PORT: "3001"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tickteira
+      POSTGRES_PASSWORD: tickteira
+      POSTGRES_DB: tickteira
+    ports: ["5433:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tickteira -d tickteira"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit
+    ports: ["8025:8025"]   # UI dos e-mails
+
+  # Só o api faz build; migrate e worker reaproveitam a mesma imagem.
+  api:
+    build:
+      context: .
+      dockerfile: docker/node.Dockerfile
+      args: { BUILD_TARGET: backend }
+    image: tickteira-backend
+    environment: *env
+    command: node apps/api/dist/main.js
+    ports: ["3001:3001"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  migrate:
+    image: tickteira-backend
+    pull_policy: never
+    environment: *env
+    command: sh -c "npm run db:migrate && npm run db:seed"
+    restart: "no"
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  worker:
+    image: tickteira-backend
+    pull_policy: never
+    environment: *env
+    command: node apps/worker/dist/main.js
+    deploy: { replicas: 3 }   # prova o requisito de múltiplos workers
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/node.Dockerfile
+      args:
+        BUILD_TARGET: web
+        NEXT_PUBLIC_API_URL: http://localhost:3001
+    command: npm run start -w @tickteira/web
+    ports: ["3000:3000"]
+    depends_on:
+      api: { condition: service_healthy }
+
+volumes:
+  pgdata:

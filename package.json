@@ -1,0 +1,21 @@
+{
+  "name": "tickteira",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "build:packages": "npm run build -w @tickteira/core && npm run build -w @tickteira/infra",
+    "build:backend": "npm run build -w @tickteira/api && npm run build -w @tickteira/worker",
+    "check:arch": "bash scripts/check-architecture.sh",
+    "db:generate": "prisma generate --schema packages/infra/prisma/schema.prisma",
+    "db:migrate": "prisma migrate deploy --schema packages/infra/prisma/schema.prisma",
+    "db:seed": "node packages/infra/prisma/seed.js",
+    "simulate": "ts-node scripts/webhook-simulator/index.ts",
+    "gen:barrel": "node scripts/gen-barrel.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "prisma": "^6.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id       String   @id @default(uuid())
+  name     String
+  startsAt DateTime @map("starts_at")
+  sectors  Sector[]
+
+  @@map("events")
+}
+
+model Sector {
+  id         String      @id @default(uuid())
+  eventId    String      @map("event_id")
+  name       String
+  capacity   Int
+  allocated  Int         @default(0)
+  priceCents Int         @map("price_cents")
+  event      Event       @relation(fields: [eventId], references: [id])
+  orderItems OrderItem[]
+  tickets    Ticket[]
+
+  @@map("sectors")
+}
+
+model Order {
+  id              String          @id @default(uuid())
+  reference       String          @unique
+  buyerEmail      String          @map("buyer_email")
+  status          String
+  totalCents      Int             @map("total_cents")
+  expiresAt       DateTime        @map("expires_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  items           OrderItem[]
+  payments        Payment[]
+  tickets         Ticket[]
+  emailDeliveries EmailDelivery[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id             String @id @default(uuid())
+  orderId        String @map("order_id")
+  sectorId       String @map("sector_id")
+  quantity       Int
+  unitPriceCents Int    @map("unit_price_cents")
+  order          Order  @relation(fields: [orderId], references: [id])
+  sector         Sector @relation(fields: [sectorId], references: [id])
+
+  @@map("order_items")
+}
+
+model Payment {
+  id                String   @id @default(uuid())
+  providerPaymentId String   @unique @map("provider_payment_id")
+  orderId           String   @map("order_id")
+  status            String
+  amountCents       Int      @map("amount_cents")
+  createdAt         DateTime @default(now()) @map("created_at")
+  order             Order    @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@map("payments")
+}
+
+model WebhookEvent {
+  eventId    String   @id @map("event_id")
+  type       String
+  payload    Json
+  occurredAt DateTime @map("occurred_at")
+  status     String   @default("RECEIVED")
+  attempts   Int      @default(0)
+  error      String?
+  receivedAt DateTime @default(now()) @map("received_at")
+
+  @@index([status, receivedAt])
+  @@map("webhook_events")
+}
+
+model Ticket {
+  id       String    @id @default(uuid())
+  orderId  String    @map("order_id")
+  sectorId String    @map("sector_id")
+  code     String    @unique
+  status   String    @default("ISSUED")
+  issuedAt DateTime  @default(now()) @map("issued_at")
+  voidedAt DateTime? @map("voided_at")
+  order    Order     @relation(fields: [orderId], references: [id])
+  sector   Sector    @relation(fields: [sectorId], references: [id])
+
+  @@index([orderId])
+  @@map("tickets")
+}
+
+model EmailDelivery {
+  id        String    @id @default(uuid())
+  orderId   String    @map("order_id")
+  recipient String
+  status    String    @default("PENDING")
+  attempts  Int       @default(0)
+  lastError String?   @map("last_error")
+  sentAt    DateTime? @map("sent_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  order     Order     @relation(fields: [orderId], references: [id])
+
+  @@index([status])
+  @@map("email_deliveries")
+}
