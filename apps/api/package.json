@@ -13,5 +13,8 @@
     "@tickteira/infra": "*",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
   }
 }

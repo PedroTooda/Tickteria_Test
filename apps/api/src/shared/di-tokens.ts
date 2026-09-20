@@ -1,5 +1,12 @@
-// Tokens de injeção: ligam contratos (interfaces) às implementações do infra.
 export const TOKENS = {
   Prisma: Symbol('Prisma'),
   Redis: Symbol('Redis'),
+  PrismaContext: Symbol('PrismaContext'),
+  Clock: Symbol('Clock'),
+  IdGenerator: Symbol('IdGenerator'),
+  UnitOfWork: Symbol('UnitOfWork'),
+  OrderRepository: Symbol('OrderRepository'),
+  SectorCatalogRepository: Symbol('SectorCatalogRepository'),
+  SectorInventoryRepository: Symbol('SectorInventoryRepository'),
+  CreateOrderUseCase: Symbol('CreateOrderUseCase'),
 } as const;
