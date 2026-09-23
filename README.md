@@ -1,5 +1,6 @@
-<<<<<<< HEAD
 # Tickteira — Desafio Fullstack
+
+[Ir para as Conclusões](#RESULTADO)
 
 ## a) Como executar
 =======
@@ -244,4 +245,28 @@ quê, e por quê?
 - IA é permitida. Só não entregue nada que você não consiga defender linha a linha na
   conversa técnica — a decisão acontece lá.
 - Dúvidas sobre o enunciado: pergunte em `[e-mail/contato]`. No dia a dia você perguntaria.
->>>>>>> f0a55e5a6559514e07ae94628eddbb5c46835d9a
+
+## RESULTADO:
+
+- **Tempo gasto: 3 dias, estudando e trabalhando apenas consegui focar no projeto nos finais de semana.
+- Estrutura utilizada, DDD com Solid básico, criar o core e as regras de negócio apenas com abstrações, sem dependência ou participação externa como o banco de dados, infra, camada intermediaria que conversa com o core, essa já recebe as requisições e conversa com o banco de dados e a gerencia de fila.
+- A estrutura foi moldada com os conceitos mencionados antes, mas foi implementada com um código scrip "SCAFFOLD_V2" gerado pelo CLAUDE AI, foi implementado junto com o script as configurações do docker, utilizando npm.
+- O docker-compose.yml definiu esses seis serviços:
+
+postgres — banco de dados, e portas a serem usadas,
+redis — fila de mensagens, usado pelo BullMQ,
+mailpit — um "Gmail falso" local,
+migrate — sobe, aplica as migrations do banco, roda o seed (dados iniciais), e desliga.
+api — para a aplicação Nest,
+worker — três réplicas do mesmo processo
+web — a telinha Next.js
+(porem não foi possível concluir todos)
+
+- Após isso foram implementadas 2 fases:
+
+Fase 1: Garantir que só seja vendido a quantidade real de ingressos, foi implementado um identificador único e tratamentos como pedido vazio, setor inexistente, setor esgotado; as regras de como montar a referência do pedido e o prazo de expiração de quinze minutos. No infra foi implementado a transação, os repositórios, e o comando que trava a vaga usando o próprio banco de dados, assim só é possível processar a quantidade exata de ingressos mesmo que haja mais tentativa de compra que a própria quantidade de ingresso.
+
+Fase 2: Logica do pagamento, API confere se esse aviso é legítimo, usando uma assinatura criptográfica, guarda esse aviso no banco de forma que nunca duplica mesmo se a operadora mandar o mesmo aviso duas vezes, e só depois joga numa fila pra ser processado com calma depois (a partir desse ponto já estava confuso do funcionamento e o prazo esgotando).
+
+Por fim, foi esse o resultado, há muita coisa a ser melhorada, mas o ponto principal para mim seria conseguir fazer o código de forma mais autônoma, sem tanto uso de inteligência artificial, para entender o real funcionamento de todas as partes do projeto.
+
