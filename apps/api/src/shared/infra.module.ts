@@ -9,6 +9,9 @@ import {
   UuidIdGenerator,
   createPrismaClient,
   createRedis,
+  HmacSignatureVerifier,
+  PrismaWebhookEventRepository,
+  BullMqPaymentEventQueue,
 } from '@tickteira/infra';
 import { TOKENS } from './di-tokens';
 
@@ -43,6 +46,19 @@ import { TOKENS } from './di-tokens';
       useFactory: (ctx) => new PrismaSectorInventoryRepository(ctx),
       inject: [TOKENS.PrismaContext],
     },
+        {
+      provide: TOKENS.SignatureVerifier,
+      useFactory: () => new HmacSignatureVerifier(process.env.PAGFACIL_WEBHOOK_SECRET ?? 'dev-secret-change-me'),
+    },
+    {
+      provide: TOKENS.WebhookEventRepository,
+      useFactory: (ctx) => new PrismaWebhookEventRepository(ctx),
+      inject: [TOKENS.PrismaContext],
+    },
+    {
+      provide: TOKENS.PaymentEventQueue,
+      useFactory: () => new BullMqPaymentEventQueue(process.env.REDIS_URL ?? 'redis://localhost:6379'),
+    },
   ],
   exports: [
     TOKENS.Prisma,
@@ -54,6 +70,9 @@ import { TOKENS } from './di-tokens';
     TOKENS.OrderRepository,
     TOKENS.SectorCatalogRepository,
     TOKENS.SectorInventoryRepository,
+    TOKENS.SignatureVerifier,
+    TOKENS.WebhookEventRepository,
+    TOKENS.PaymentEventQueue,
   ],
 })
 export class InfraModule {}

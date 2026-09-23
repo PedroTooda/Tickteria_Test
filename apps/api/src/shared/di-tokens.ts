@@ -9,4 +9,8 @@ export const TOKENS = {
   SectorCatalogRepository: Symbol('SectorCatalogRepository'),
   SectorInventoryRepository: Symbol('SectorInventoryRepository'),
   CreateOrderUseCase: Symbol('CreateOrderUseCase'),
+  SignatureVerifier: Symbol('SignatureVerifier'),
+  WebhookEventRepository: Symbol('WebhookEventRepository'),
+  PaymentEventQueue: Symbol('PaymentEventQueue'),
+  ReceiveWebhookUseCase: Symbol('ReceiveWebhookUseCase'),
 } as const;

@@ -10,3 +10,5 @@ export * from './persistence/repositories/prisma-order.repository';
 export * from './persistence/repositories/prisma-sector-catalog.repository';
 export * from './persistence/repositories/prisma-sector-inventory.repository';
 export * from './id/uuid.id-generator';
+export * from './persistence/repositories/prisma-webhook-event.repository';
+export * from './queue/bullmq-payment-event.queue';
